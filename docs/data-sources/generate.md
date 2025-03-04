@@ -13,8 +13,6 @@ description: |-
 ## Example Usage
 
 ```terraform
-# Copyright (c) HashiCorp, Inc.
-
 data "qrcode_generate" "default" {
   text = "qrcode"
 }
