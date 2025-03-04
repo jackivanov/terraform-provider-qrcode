@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	// These variables are set during build via -ldflags
+	// These variables are set during build via -ldflags.
 	version = "dev"
 )
 

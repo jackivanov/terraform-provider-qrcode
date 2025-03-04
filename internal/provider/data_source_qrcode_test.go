@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-// TestAccQRCodeDataSource verifies the qrcode_generate data source
+// TestAccQRCodeDataSource verifies the qrcode_generate data source.
 func TestAccQRCodeDataSource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

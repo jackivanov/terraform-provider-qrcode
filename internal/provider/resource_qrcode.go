@@ -7,18 +7,18 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/skip2/go-qrcode"
 
 	"path/filepath"
 )
 
-// Ensure implementation satisfies the expected interfaces
+// Ensure implementation satisfies the expected interfaces.
 var _ resource.Resource = &qrcodeResource{}
 
 // qrcodeResource is the resource implementation.
@@ -191,36 +191,35 @@ func (r *qrcodeResource) Update(ctx context.Context, req resource.UpdateRequest,
 // Delete removes the QR code file and the resource from state.
 func (r *qrcodeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state struct {
-			Text          types.String `tfsdk:"text"`
-			SensitiveText types.String `tfsdk:"sensitive_text"`
-			Size          types.Int64  `tfsdk:"size"`
-			File          types.String `tfsdk:"file"`
-			SHA256        types.String `tfsdk:"sha256"`
+		Text          types.String `tfsdk:"text"`
+		SensitiveText types.String `tfsdk:"sensitive_text"`
+		Size          types.Int64  `tfsdk:"size"`
+		File          types.String `tfsdk:"file"`
+		SHA256        types.String `tfsdk:"sha256"`
 	}
 
 	// Read current state
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
-			return
+		return
 	}
 
 	// Remove the file if it exists
 	if state.File.IsNull() || state.File.ValueString() == "" {
-    return // No file to delete
+		return // No file to delete
 	}
 
 	filePath := state.File.ValueString()
 
 	if _, err := os.Stat(filePath); err == nil {
-			// File exists, attempt to delete
-			if err := os.Remove(filePath); err != nil {
-					resp.Diagnostics.AddError("Failed to Delete QR Code", err.Error())
-					return
-			}
+		// File exists, attempt to delete
+		if err := os.Remove(filePath); err != nil {
+			resp.Diagnostics.AddError("Failed to Delete QR Code", err.Error())
+			return
+		}
 	}
 
 	// Remove the resource from state
 	resp.State.RemoveResource(ctx)
 }
-

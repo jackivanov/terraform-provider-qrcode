@@ -1,25 +1,25 @@
 package provider
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"io"
 	"math/rand"
 	"os"
 	"path/filepath"
-	"time"
 	"testing"
-  "fmt"
-  "crypto/sha256"
-  "encoding/hex"
-  "io"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-  "github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // randomTempFileName generates a random temporary file name.
 func randomTempFileName() string {
-	rand.Seed(time.Now().UnixNano())
+	r := rand.New(rand.NewSource(time.Now().UnixNano())) // Create a new random generator instance
 	tmpDir := os.TempDir()
-	return filepath.Join(tmpDir, fmt.Sprintf("tmp-%d", rand.Uint64()))
+	return filepath.Join(tmpDir, fmt.Sprintf("tmp-%d", r.Uint64())) // Use r.Uint64() instead of rand.Uint64()
 }
 
 // calculateSHA256 computes the SHA-256 checksum of a file.
@@ -38,10 +38,10 @@ func calculateSHA256(filePath string) (string, error) {
 	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
-// TestAccQRCodeResource verifies the qrcode_generate resource
+// TestAccQRCodeResource verifies the qrcode_generate resource.
 func TestAccQRCodeResource(t *testing.T) {
 	filePath := randomTempFileName()
-  expectedChecksum := "21489894b9e5f457473da5025741a7ce935c14d4a6ca9e29a72eec324c5fd743"
+	expectedChecksum := "21489894b9e5f457473da5025741a7ce935c14d4a6ca9e29a72eec324c5fd743"
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

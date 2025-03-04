@@ -6,13 +6,13 @@ import (
 	"encoding/hex"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/skip2/go-qrcode"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/skip2/go-qrcode"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -84,13 +84,13 @@ func computeSHA256(input string) string {
 func (d *QRCodeDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	// Define the input struct matching the schema
 	var data struct {
-		Text           types.String `tfsdk:"text"`
-		SensitiveText  types.String `tfsdk:"sensitive_text"`
+		Text            types.String `tfsdk:"text"`
+		SensitiveText   types.String `tfsdk:"sensitive_text"`
 		ErrorCorrection types.String `tfsdk:"error_correction"`
-		DisableBorder  types.Bool   `tfsdk:"disable_border"`
-		Invert         types.Bool   `tfsdk:"invert"`
-		ASCII          types.String `tfsdk:"ascii"`
-		ASCIISHA256    types.String `tfsdk:"ascii_sha256"`
+		DisableBorder   types.Bool   `tfsdk:"disable_border"`
+		Invert          types.Bool   `tfsdk:"invert"`
+		ASCII           types.String `tfsdk:"ascii"`
+		ASCIISHA256     types.String `tfsdk:"ascii_sha256"`
 	}
 
 	// Read input data from Terraform
