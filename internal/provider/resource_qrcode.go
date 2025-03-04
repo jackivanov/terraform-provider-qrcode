@@ -2,6 +2,8 @@ package provider
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"os"
 
@@ -41,10 +43,10 @@ func (r *qrcodeResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Description: "The text content to encode in the QR code.",
 				Validators: []validator.String{
 					stringvalidator.ExactlyOneOf(
-							path.MatchRoot("text"),
-							path.MatchRoot("sensitive_text"),
+						path.MatchRoot("text"),
+						path.MatchRoot("sensitive_text"),
 					),
-			},
+				},
 			},
 			"sensitive_text": schema.StringAttribute{
 				Optional:    true,
@@ -59,6 +61,10 @@ func (r *qrcodeResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Required:    true,
 				Description: "Path to save the generated QR code image.",
 			},
+			"sha256": schema.StringAttribute{
+				Computed:    true,
+				Description: "SHA-256 checksum of the generated QR code image.",
+			},
 		},
 	}
 }
@@ -70,6 +76,7 @@ func (r *qrcodeResource) Create(ctx context.Context, req resource.CreateRequest,
 		SensitiveText types.String `tfsdk:"sensitive_text"`
 		Size          types.Int64  `tfsdk:"size"`
 		File          types.String `tfsdk:"file"`
+		SHA256        types.String `tfsdk:"sha256"`
 	}
 
 	diags := req.Plan.Get(ctx, &plan)
@@ -93,12 +100,12 @@ func (r *qrcodeResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	size := defaultSize
 	if !plan.Size.IsNull() {
-			sizeVal := int(plan.Size.ValueInt64())
-			if sizeVal < minSize || sizeVal > maxSize {
-					resp.Diagnostics.AddError("Invalid Size", fmt.Sprintf("Size must be between %d and %d pixels.", minSize, maxSize))
-					return
-			}
-			size = sizeVal
+		sizeVal := int(plan.Size.ValueInt64())
+		if sizeVal < minSize || sizeVal > maxSize {
+			resp.Diagnostics.AddError("Invalid Size", fmt.Sprintf("Size must be between %d and %d pixels.", minSize, maxSize))
+			return
+		}
+		size = sizeVal
 	}
 
 	// Generate QR code
@@ -108,19 +115,23 @@ func (r *qrcodeResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
+	// Compute SHA-256 checksum
+	hash := sha256.Sum256(pngData)
+	sha256Checksum := hex.EncodeToString(hash[:])
+
 	// Save to file
 	filePath := plan.File.ValueString()
 	dir := filepath.Dir(filePath)
 
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-			resp.Diagnostics.AddError("Failed to Create Directory", err.Error())
-			return
+		resp.Diagnostics.AddError("Failed to Create Directory", err.Error())
+		return
 	}
 
 	err = os.WriteFile(filePath, pngData, 0644)
 	if err != nil {
-			resp.Diagnostics.AddError("Failed to Save QR Code", err.Error())
-			return
+		resp.Diagnostics.AddError("Failed to Save QR Code", err.Error())
+		return
 	}
 
 	// Set state
@@ -129,11 +140,13 @@ func (r *qrcodeResource) Create(ctx context.Context, req resource.CreateRequest,
 		SensitiveText types.String `tfsdk:"sensitive_text"`
 		Size          types.Int64  `tfsdk:"size"`
 		File          types.String `tfsdk:"file"`
+		SHA256        types.String `tfsdk:"sha256"`
 	}{
 		Text:          plan.Text,
 		SensitiveText: plan.SensitiveText,
 		Size:          plan.Size,
 		File:          plan.File,
+		SHA256:        types.StringValue(sha256Checksum),
 	})
 }
 
@@ -144,6 +157,7 @@ func (r *qrcodeResource) Read(ctx context.Context, req resource.ReadRequest, res
 		SensitiveText types.String `tfsdk:"sensitive_text"`
 		Size          types.Int64  `tfsdk:"size"`
 		File          types.String `tfsdk:"file"`
+		SHA256        types.String `tfsdk:"sha256"`
 	}
 
 	// Read the state
@@ -174,12 +188,14 @@ func (r *qrcodeResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}, (*resource.CreateResponse)(resp))
 }
 
+// Delete removes the QR code file and the resource from state.
 func (r *qrcodeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state struct {
 			Text          types.String `tfsdk:"text"`
 			SensitiveText types.String `tfsdk:"sensitive_text"`
 			Size          types.Int64  `tfsdk:"size"`
 			File          types.String `tfsdk:"file"`
+			SHA256        types.String `tfsdk:"sha256"`
 	}
 
 	// Read current state

@@ -2,15 +2,17 @@ package provider
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/skip2/go-qrcode"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -38,10 +40,10 @@ func (d *QRCodeDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.ExactlyOneOf(
-							path.MatchRoot("text"),
-							path.MatchRoot("sensitive_text"),
+						path.MatchRoot("text"),
+						path.MatchRoot("sensitive_text"),
 					),
-			},
+				},
 			},
 			"sensitive_text": schema.StringAttribute{
 				Description: "Sensitive text to encode as a QR code.",
@@ -64,8 +66,18 @@ func (d *QRCodeDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 				Description: "ASCII text representation of the QR code.",
 				Computed:    true,
 			},
+			"ascii_sha256": schema.StringAttribute{
+				Description: "SHA-256 checksum of the ASCII QR code.",
+				Computed:    true,
+			},
 		},
 	}
+}
+
+// computeSHA256 calculates the SHA-256 hash of a string and returns it as a hex string.
+func computeSHA256(input string) string {
+	hash := sha256.Sum256([]byte(input))
+	return hex.EncodeToString(hash[:])
 }
 
 // Read generates the QR code in both Base64 PNG and ASCII formats.
@@ -78,6 +90,7 @@ func (d *QRCodeDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		DisableBorder  types.Bool   `tfsdk:"disable_border"`
 		Invert         types.Bool   `tfsdk:"invert"`
 		ASCII          types.String `tfsdk:"ascii"`
+		ASCIISHA256    types.String `tfsdk:"ascii_sha256"`
 	}
 
 	// Read input data from Terraform
@@ -107,13 +120,15 @@ func (d *QRCodeDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	}
 
 	// Determine which text to use for QR generation
-	textValue := data.Text.ValueString()
-	if data.Text.IsNull() {
-		textValue = data.SensitiveText.ValueString()
+	qrText := ""
+	if !data.Text.IsNull() {
+		qrText = data.Text.ValueString()
+	} else {
+		qrText = data.SensitiveText.ValueString()
 	}
 
 	// Generate QR code
-	qr, err := qrcode.New(textValue, level)
+	qr, err := qrcode.New(qrText, level)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"QR Code Generation Failed",
@@ -130,8 +145,12 @@ func (d *QRCodeDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	// Convert to ASCII (invert mode supported by the library)
 	asciiQR := qr.ToSmallString(data.Invert.ValueBool()) // true = inverted mode
 
+	// Compute SHA-256 checksum
+	asciiChecksum := computeSHA256(asciiQR)
+
 	// Set Terraform state
 	data.ASCII = types.StringValue(asciiQR)
+	data.ASCIISHA256 = types.StringValue(asciiChecksum)
 
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
