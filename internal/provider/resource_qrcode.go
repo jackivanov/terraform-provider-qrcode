@@ -37,6 +37,7 @@ func (r *qrcodeResource) Metadata(_ context.Context, req resource.MetadataReques
 // Schema defines the resource schema.
 func (r *qrcodeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "The `qrcode_generate` resource allows you to create QR codes from text input. This is useful for encoding information such as URLs, authentication keys, or configuration details into a scannable format. The QR codes can be generated in PNG format and saved to a specified file path, or displayed in ASCII format for terminal-based use.",
 		Attributes: map[string]schema.Attribute{
 			"text": schema.StringAttribute{
 				Optional:    true,

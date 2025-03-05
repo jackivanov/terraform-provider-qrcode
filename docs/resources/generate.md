@@ -3,7 +3,7 @@
 page_title: "qrcode_generate Resource - qrcode"
 subcategory: ""
 description: |-
-  A resource for generating QR codes from text, supporting PNG and ASCII formats.
+  The qrcode_generate resource allows you to create QR codes from text input. This is useful for encoding information such as URLs, authentication keys, or configuration details into a scannable format. The QR codes can be generated in PNG format and saved to a specified file path, or displayed in ASCII format for terminal-based use.
 ---
 
 # qrcode_generate (Resource)

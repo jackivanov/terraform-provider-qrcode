@@ -39,7 +39,9 @@ func (p *qrcodeProvider) Metadata(_ context.Context, _ provider.MetadataRequest,
 
 // Schema defines the provider-level schema for configuration data.
 func (p *qrcodeProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
-	resp.Schema = schema.Schema{}
+	resp.Schema = schema.Schema{
+		MarkdownDescription: "The `qrcode` provider allows you to generate QR codes from input strings. This can be useful for encoding configuration details, authentication keys, or any other data in a scannable format. QR codes can be generated in PNG or ASCII formats, making it easy to integrate into various workflows.",
+	}
 }
 
 // Configure prepares any necessary provider-level setup.

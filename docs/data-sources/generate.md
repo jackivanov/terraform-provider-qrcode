@@ -3,7 +3,7 @@
 page_title: "qrcode_generate Data Source - qrcode"
 subcategory: ""
 description: |-
-  A data source for generating QR codes from text, supporting ASCII representation.
+  The qrcode_generate data source allows you to generate QR codes from text input without creating a file. This is useful for dynamically generating QR codes in ASCII format for display in logs, terminal outputs, or other text-based interfaces. It also supports various customization options, such as error correction levels, color inversion, and border removal.
 ---
 
 # qrcode_generate (Data Source)

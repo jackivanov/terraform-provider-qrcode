@@ -34,6 +34,8 @@ func (d *QRCodeDataSource) Metadata(_ context.Context, req datasource.MetadataRe
 // Schema defines the input and output attributes for the QR code data source.
 func (d *QRCodeDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "The `qrcode_generate` data source allows you to generate QR codes from text input without creating a file. This is useful for dynamically generating QR codes in ASCII format for display in logs, terminal outputs, or other text-based interfaces. It also supports various customization options, such as error correction levels, color inversion, and border removal.",
+
 		Attributes: map[string]schema.Attribute{
 			"text": schema.StringAttribute{
 				Description: "The text to encode as a QR code.",
